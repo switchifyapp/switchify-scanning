@@ -261,3 +261,31 @@ test("a held switch pauses automatic movement until release", () => {
   clock.advance(500);
   expect(highlight(controller)).toEqual({ kind: "item", id: "b" });
 });
+
+test("an exclusive group confines scanning until it is removed", async () => {
+  const { controller } = setup({ options: { automatic: false } });
+  controller.registerItem("page-a");
+  controller.registerItem("page-b");
+  controller.flush();
+  controller.start();
+  controller.dispatch("next");
+  const closeDialog = controller.registerGroup("dialog", { exclusive: true });
+  const dialogItems = [controller.registerItem("ok", { parentId: "dialog" }), controller.registerItem("cancel", { parentId: "dialog" })];
+  controller.flush();
+  expect(highlight(controller)).toEqual({ kind: "item", id: "ok" });
+  controller.dispatch("next");
+  controller.dispatch("next");
+  expect(highlight(controller)).toEqual({ kind: "item", id: "ok" });
+  const closeNested = controller.registerGroup("nested", { exclusive: true });
+  const removeInner = controller.registerItem("inner", { parentId: "nested" });
+  controller.flush();
+  expect(highlight(controller)).toEqual({ kind: "item", id: "inner" });
+  removeInner();
+  closeNested();
+  await Promise.resolve();
+  expect(highlight(controller)).toEqual({ kind: "item", id: "ok" });
+  dialogItems.forEach((remove) => remove());
+  closeDialog();
+  await Promise.resolve();
+  expect(highlight(controller)).toEqual({ kind: "item", id: "page-a" });
+});

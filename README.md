@@ -105,6 +105,8 @@ Call `item.measure()` after scrolling if the order should follow the new positio
 
 `ScanProvider` also takes `policy` (`Policy.KEYBOARD`, the default, restarts from the top; `Policy.MENU` stays where it was), `afterSelection` (`continue` or `stop`), `onSelect` and `onError`. If `onActivate` returns a promise, scanning holds until it settles.
 
+Pass `exclusive` to `useScanGroup` or `<ScanGroup>` for a dialog: while it is mounted, scanning is confined to it. The most recently mounted exclusive group wins.
+
 Ids must be unique across items and groups.
 
 ## License

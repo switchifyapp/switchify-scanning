@@ -189,6 +189,8 @@ export function useScanItem(
 
 export interface ScanGroupOptions {
   order?: number;
+  /** Confine scanning to this group while it is mounted, as for an open dialog. */
+  exclusive?: boolean;
 }
 
 export interface ScanGroupState {
@@ -224,14 +226,14 @@ function groupState(key: GroupKey): ScanGroupState {
 /** Registers a group in the current scope. Wrap its children in ScanGroupScope. */
 export function useScanGroup(
   id: string,
-  { order }: ScanGroupOptions = {},
+  { order, exclusive }: ScanGroupOptions = {},
   anchor?: unknown,
 ): ScanGroupState {
   const controller = useScanController();
   const scope = useContext(ScopeContext);
   useEffect(
-    () => controller.registerGroup(id, { parentId: scope.id, order }, anchor),
-    [controller, id, scope.id, order, anchor],
+    () => controller.registerGroup(id, { parentId: scope.id, order, exclusive }, anchor),
+    [controller, id, scope.id, order, exclusive, anchor],
   );
   const read = useCallback(
     (snapshot: ScanSnapshot): GroupKey => {
@@ -261,8 +263,8 @@ export interface ScanGroupProps extends ScanGroupOptions {
 }
 
 /** A group with no element of its own. Use the dom or native wrappers to order groups by layout. */
-export function ScanGroup({ id, order, children }: ScanGroupProps) {
-  const state = useScanGroup(id, { order });
+export function ScanGroup({ id, order, exclusive, children }: ScanGroupProps) {
+  const state = useScanGroup(id, { order, exclusive });
   return (
     <ScanGroupScope id={id}>{typeof children === "function" ? children(state) : children}</ScanGroupScope>
   );
