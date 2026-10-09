@@ -174,7 +174,9 @@ export class ScanController {
   }
 
   setOptions(options: Partial<ScanOptions>): void {
-    const next = resolveOptions({ ...this.scanner.options, ...options });
+    // An option left undefined keeps its current value rather than resetting to the default.
+    const given = Object.fromEntries(Object.entries(options).filter(([, value]) => value !== undefined)) as Partial<ScanOptions>;
+    const next = resolveOptions({ ...this.scanner.options, ...given });
     const current = this.scanner.options;
     if ((Object.keys(next) as (keyof ScanOptions)[]).every((key) => next[key] === current[key])) {
       return;
