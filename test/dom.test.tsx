@@ -129,3 +129,9 @@ test("the latest handler runs without re-registering", async () => {
   act(() => scanner.dispatch("select"));
   expect(screen.getByTestId("count").textContent).toBe("2");
 });
+
+test("hooks outside a provider render without scanning", async () => {
+  render(<Item id="alone" />);
+  await flush();
+  expect(highlighted("alone")).toBe(false);
+});
