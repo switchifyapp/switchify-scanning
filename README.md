@@ -2,7 +2,7 @@
 
 Switch scanning for React and React Native. The scanning engine is a TypeScript port of the item scanner in [Switchify PC](https://github.com/switchifyapp/switchify-pc) (`scan_tree.rs`, `scan_items.rs`, `scan_preferences.rs`), with its tests carried over.
 
-The library is headless: it tells each item and group whether it is highlighted, and your app draws the highlight. It does not read switches. Call `dispatch` with `select`, `next`, `back`, `pause`, `reverse` or `stop` from whatever input you use.
+The library is headless: it tells each item and group whether it is highlighted, and your app draws the highlight. Switches either come through `useKeyboardSwitches` (DOM), or your own input calling `dispatch` with `select`, `next`, `back`, `pause`, `reverse` or `stop`.
 
 | Import | Use |
 |---|---|
@@ -50,6 +50,29 @@ function SwitchKeys() {
 ```
 
 Style with `[data-scan-highlighted]`, `[data-scan-group-highlighted]`, `[data-scan-entered]` and `[data-scan-escape-highlighted]`.
+
+## Switches
+
+`useKeyboardSwitches` (from `/dom`) reads keyboard-style switch interfaces. Each binding has a `KeyboardEvent.code`, a press action, and hold actions offered in turn every `holdIntervalMs`, matching Switchify PC:
+
+```tsx
+const { held, prompt } = useKeyboardSwitches({
+  settings: {
+    holdIntervalMs: 1000,
+    bindings: [
+      { id: "select", name: "Select", key: "Space", pressAction: "select", holdActions: ["reverse", "stop"] },
+      { id: "next", name: "Next", key: "Enter", pressAction: "next", holdActions: [] },
+    ],
+  },
+});
+// prompt?.action is what releasing now would do.
+```
+
+- Bound keys are kept from the page, so Space and Enter don't also click whatever has focus.
+- Keys pass through while focus is in a text field, unless you set `ignoreWhileTyping: false`.
+- Escape stops scanning.
+- Automatic movement pauses while a switch is held.
+- `validateSwitchSettings` reports settings that can't drive scanning, for example ones with no Select, or manual scanning without Next and Previous.
 
 ## React Native
 

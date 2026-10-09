@@ -136,6 +136,7 @@ export class ScanController {
   private sequence = 0;
   private active = false;
   private paused = false;
+  private switchHeld = false;
   private clock: unknown;
   private last = 0;
   private snapshot: ScanSnapshot = INACTIVE;
@@ -233,6 +234,17 @@ export class ScanController {
   /** Re-reads the order of everything registered, for when the layout moved. */
   reorder(): void {
     this.contentChanged();
+  }
+
+  /**
+   * Holds automatic movement while a switch is down, as Switchify PC does, so the
+   * highlight cannot move away from the item being selected. Movement continues
+   * from where it paused once the switch is released.
+   */
+  setSwitchHeld(held: boolean): void {
+    if (this.switchHeld === held) return;
+    this.switchHeld = held;
+    this.update();
   }
 
   start(): void {
@@ -381,6 +393,7 @@ export class ScanController {
     return (
       this.active &&
       !this.paused &&
+      !this.switchHeld &&
       this.scanner.options.automatic &&
       !this.scanner.suspended &&
       !this.scanner.pending()

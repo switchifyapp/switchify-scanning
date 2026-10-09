@@ -36,3 +36,14 @@ export {
   type ScanOptions,
   type StartFrom,
 } from "./core/options";
+export {
+  DEFAULT_SWITCH_SETTINGS,
+  MAX_HOLD_INTERVAL_MS,
+  MIN_HOLD_INTERVAL_MS,
+  RESERVED_KEY,
+  SwitchGestures,
+  validateSwitchSettings,
+  type HoldPrompt,
+  type SwitchBinding,
+  type SwitchSettings,
+} from "./core/switches";

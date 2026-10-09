@@ -131,3 +131,16 @@ export {
   type ScanGroupState,
   type ScanItemState,
 } from "../react";
+export {
+  isTextEntry,
+  useKeyboardSwitches,
+  type KeyboardSwitchOptions,
+  type KeyboardSwitchState,
+} from "./keyboardSwitches";
+export {
+  DEFAULT_SWITCH_SETTINGS,
+  validateSwitchSettings,
+  type HoldPrompt,
+  type SwitchBinding,
+  type SwitchSettings,
+} from "../core/switches";

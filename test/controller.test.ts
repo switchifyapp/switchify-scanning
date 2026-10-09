@@ -245,3 +245,19 @@ test("comparators see anchors set before registration", () => {
   controller.start();
   expect(highlight(controller)).toEqual({ kind: "item", id: "b" });
 });
+
+test("a held switch pauses automatic movement until release", () => {
+  const { controller, clock } = setup({ options: { intervalMs: 500 } });
+  controller.registerItem("a");
+  controller.registerItem("b");
+  controller.flush();
+  controller.start();
+  controller.setSwitchHeld(true);
+  expect(clock.running()).toBe(false);
+  controller.tick(1000);
+  expect(highlight(controller)).toEqual({ kind: "item", id: "a" });
+  controller.setSwitchHeld(false);
+  expect(clock.running()).toBe(true);
+  clock.advance(500);
+  expect(highlight(controller)).toEqual({ kind: "item", id: "b" });
+});
