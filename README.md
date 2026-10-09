@@ -72,7 +72,7 @@ const { held, prompt } = useKeyboardSwitches({
 - Keys pass through while focus is in a text field, unless you set `ignoreWhileTyping: false`.
 - Escape stops scanning.
 - `interceptPress(switchId)` runs when a switch goes down. Return true to consume the whole press, for example to let any press stop something the app is repeating.
-- Automatic movement pauses while a switch is held.
+- Automatic movement pauses while a switch is held. Call `controller.holdMovement(reason, held)` to hold it for reasons of your own, for example while something the app started is still repeating.
 - `validateSwitchSettings` reports settings that can't drive scanning, for example ones with no Select, or manual scanning without Next and Previous.
 
 ## React Native

@@ -299,3 +299,17 @@ test("options left undefined keep their current values", () => {
   controller.start();
   expect(clock.running()).toBe(false);
 });
+
+test("movement stays held until every reason is released", () => {
+  const { controller, clock } = setup({ options: { intervalMs: 500 } });
+  controller.registerItem("a");
+  controller.registerItem("b");
+  controller.flush();
+  controller.start();
+  controller.holdMovement("repeat", true);
+  controller.setSwitchHeld(true);
+  controller.setSwitchHeld(false);
+  expect(clock.running()).toBe(false);
+  controller.holdMovement("repeat", false);
+  expect(clock.running()).toBe(true);
+});
