@@ -143,7 +143,7 @@ export class ScanController {
   private sequence = 0;
   private active = false;
   private paused = false;
-  private switchHeld = false;
+  private readonly holds = new Set<string>();
   private clock: unknown;
   private last = 0;
   private snapshot: ScanSnapshot = INACTIVE;
@@ -252,14 +252,23 @@ export class ScanController {
   }
 
   /**
+   * Holds automatic movement while `reason` applies, for example while something the
+   * app started is still running. Movement continues from where it paused once every
+   * reason is released.
+   */
+  holdMovement(reason: string, held: boolean): void {
+    if (this.holds.has(reason) === held) return;
+    if (held) this.holds.add(reason);
+    else this.holds.delete(reason);
+    this.update();
+  }
+
+  /**
    * Holds automatic movement while a switch is down, as Switchify PC does, so the
-   * highlight cannot move away from the item being selected. Movement continues
-   * from where it paused once the switch is released.
+   * highlight cannot move away from the item being selected.
    */
   setSwitchHeld(held: boolean): void {
-    if (this.switchHeld === held) return;
-    this.switchHeld = held;
-    this.update();
+    this.holdMovement("switch", held);
   }
 
   start(): void {
@@ -416,7 +425,7 @@ export class ScanController {
     return (
       this.active &&
       !this.paused &&
-      !this.switchHeld &&
+      this.holds.size === 0 &&
       this.scanner.options.automatic &&
       !this.scanner.suspended &&
       !this.scanner.pending()

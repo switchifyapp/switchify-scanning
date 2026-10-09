@@ -1,6 +1,6 @@
 {
   "name": "@switchify/scanning",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Switch scanning for React and React Native, ported from Switchify PC.",
   "license": "AGPL-3.0-only",
   "type": "module",
