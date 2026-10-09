@@ -90,10 +90,17 @@ export function ScanProvider({
   return <ControllerContext.Provider value={controller}>{children}</ControllerContext.Provider>;
 }
 
+let inert: ScanController | undefined;
+
+/**
+ * Outside a ScanProvider the hooks use one controller that is never started, so a
+ * shared component can call them whether or not its screen is scanned.
+ */
 export function useScanController(): ScanController {
   const controller = useContext(ControllerContext);
-  if (!controller) throw new Error("Scanning hooks must be used inside a ScanProvider.");
-  return controller;
+  if (controller) return controller;
+  inert ??= new ScanController();
+  return inert;
 }
 
 export function useScanSnapshot(): ScanSnapshot {
