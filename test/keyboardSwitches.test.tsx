@@ -16,8 +16,9 @@ function Item({ id, onActivate }: { id: string; onActivate?: () => void }) {
 
 let switches: ReturnType<typeof useKeyboardSwitches>;
 let scanner: ReturnType<typeof useScanner>;
+let intercept: ((id: string) => boolean) | undefined;
 function Switches({ enabled = true }: { enabled?: boolean }) {
-  switches = useKeyboardSwitches({ settings, enabled });
+  switches = useKeyboardSwitches({ settings, enabled, interceptPress: (id) => intercept?.(id) ?? false });
   scanner = useScanner();
   return null;
 }
@@ -96,4 +97,21 @@ test("nothing is captured while disabled", async () => {
   act(() => { window.dispatchEvent(event); });
   expect(event.defaultPrevented).toBe(false);
   expect(scanner.snapshot.active).toBe(false);
+});
+
+test("an intercepted press is consumed whole and never becomes a scan action", async () => {
+  await setup();
+  tap("Space");
+  expect(highlighted("a")).toBe(true);
+  let repeating = true;
+  intercept = vi.fn(() => { const was = repeating; repeating = false; return was; });
+  const down = new KeyboardEvent("keydown", { code: "Enter", bubbles: true, cancelable: true });
+  act(() => { window.dispatchEvent(down); });
+  expect(down.defaultPrevented).toBe(true);
+  key("keyup", "Enter");
+  expect(highlighted("a")).toBe(true);
+  expect(intercept).toHaveBeenCalledWith("next");
+  tap("Enter");
+  expect(highlighted("b")).toBe(true);
+  intercept = undefined;
 });

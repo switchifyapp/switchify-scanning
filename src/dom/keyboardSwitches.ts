@@ -13,6 +13,12 @@ export interface KeyboardSwitchOptions {
    */
   ignoreWhileTyping?: boolean;
   onAction?: (action: ScanAction, switchId: string) => void;
+  /**
+   * Called when a switch goes down. Returning true consumes the whole press, which
+   * then never becomes a scan action. Use it to let any press stop something the
+   * app is repeating.
+   */
+  interceptPress?: (switchId: string) => boolean;
 }
 
 export interface KeyboardSwitchState {
@@ -45,16 +51,18 @@ export function useKeyboardSwitches({
   enabled = true,
   ignoreWhileTyping = true,
   onAction,
+  interceptPress,
 }: KeyboardSwitchOptions): KeyboardSwitchState {
   const controller = useScanController();
   const [state, setState] = useState<KeyboardSwitchState>({ held: false, prompt: undefined });
-  const latest = useRef({ settings, ignoreWhileTyping, onAction });
-  latest.current = { settings, ignoreWhileTyping, onAction };
+  const latest = useRef({ settings, ignoreWhileTyping, onAction, interceptPress });
+  latest.current = { settings, ignoreWhileTyping, onAction, interceptPress };
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
     const gestures = new SwitchGestures();
     const captured = new Set<string>();
+    const intercepted = new Set<string>();
     let timer: ReturnType<typeof setInterval> | undefined;
     const now = () => (globalThis.performance ?? Date).now();
     const show = () => {
@@ -75,6 +83,7 @@ export function useKeyboardSwitches({
     const reset = () => {
       gestures.cancel();
       captured.clear();
+      intercepted.clear();
       stopTimer();
       controller.setSwitchHeld(false);
       show();
@@ -95,7 +104,11 @@ export function useKeyboardSwitches({
       event.preventDefault();
       event.stopPropagation();
       captured.add(event.code);
-      if (event.repeat) return;
+      if (event.repeat || intercepted.has(event.code)) return;
+      if (!gestures.isHeld() && latest.current.interceptPress?.(match.id)) {
+        intercepted.add(event.code);
+        return;
+      }
       gestures.pressed(match.id, now(), latest.current.settings);
       controller.setSwitchHeld(true);
       timer ??= setInterval(show, PROMPT_TICK_MS);
@@ -106,6 +119,7 @@ export function useKeyboardSwitches({
       if (!captured.delete(event.code)) return;
       event.preventDefault();
       event.stopPropagation();
+      if (intercepted.delete(event.code)) return;
       const match = binding(event.code);
       const action = match ? gestures.released(match.id, now()) : undefined;
       if (!gestures.isHeld()) {
