@@ -289,3 +289,13 @@ test("an exclusive group confines scanning until it is removed", async () => {
   await Promise.resolve();
   expect(highlight(controller)).toEqual({ kind: "item", id: "page-a" });
 });
+
+test("options left undefined keep their current values", () => {
+  const { controller, clock } = setup({ options: { automatic: false, intervalMs: 700 } });
+  controller.setOptions({ automatic: undefined, intervalMs: undefined, pattern: "linear" });
+  expect(controller.options).toMatchObject({ automatic: false, intervalMs: 700, pattern: "linear" });
+  controller.registerItem("a");
+  controller.flush();
+  controller.start();
+  expect(clock.running()).toBe(false);
+});
