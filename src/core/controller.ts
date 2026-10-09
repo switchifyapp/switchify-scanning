@@ -29,6 +29,11 @@ export interface ItemRegistration {
 export interface GroupRegistration {
   parentId?: string;
   order?: number;
+  /**
+   * While registered, scanning is confined to this group, as for an open dialog.
+   * The most recently registered exclusive group wins.
+   */
+  exclusive?: boolean;
 }
 
 export type Highlight =
@@ -133,6 +138,8 @@ export class ScanController {
     Pick<ScanControllerOptions, "onSelect" | "onError">;
   private scanner: ItemScanner<string>;
   private readonly sequences = new Map<string, number>();
+  private readonly exclusive = new Map<string, number>();
+  private exclusiveOrder = 0;
   private sequence = 0;
   private active = false;
   private paused = false;
@@ -214,10 +221,16 @@ export class ScanController {
       sequence: this.sequenceOf(id),
     };
     this.groups.set(id, entry);
+    if (registration.exclusive) {
+      if (!this.exclusive.has(id)) this.exclusive.set(id, ++this.exclusiveOrder);
+    } else {
+      this.exclusive.delete(id);
+    }
     this.contentChanged();
     return () => {
       if (this.groups.get(id) === entry) {
         this.groups.delete(id);
+        this.exclusive.delete(id);
         this.contentChanged();
       }
     };
@@ -386,7 +399,15 @@ export class ScanController {
           if (seen.has(entry.id)) return [];
           return [group(entry.id, build(entry.id, new Set(seen).add(entry.id)))];
         });
-    return build(undefined, new Set());
+    let scope: string | undefined;
+    let latest = -1;
+    for (const [id, order] of this.exclusive) {
+      if (this.groups.has(id) && order > latest) {
+        scope = id;
+        latest = order;
+      }
+    }
+    return build(scope, scope === undefined ? new Set() : new Set([scope]));
   }
 
   private moving(): boolean {
