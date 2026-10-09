@@ -71,6 +71,7 @@ const { held, prompt } = useKeyboardSwitches({
 - Bound keys are kept from the page, so Space and Enter don't also click whatever has focus.
 - Keys pass through while focus is in a text field, unless you set `ignoreWhileTyping: false`.
 - Escape stops scanning.
+- `interceptPress(switchId)` runs when a switch goes down. Return true to consume the whole press, for example to let any press stop something the app is repeating.
 - Automatic movement pauses while a switch is held.
 - `validateSwitchSettings` reports settings that can't drive scanning, for example ones with no Select, or manual scanning without Next and Previous.
 
